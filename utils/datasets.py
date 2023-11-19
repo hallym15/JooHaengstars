@@ -247,7 +247,7 @@ class LoadStreams:
             cv2.VideoWriter_fourcc('M','J','P','G')
             assert cap.isOpened(), f'{st}Failed to open {s}'
             cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT,360)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT,384)
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             fps = cap.get(cv2.CAP_PROP_FPS)  # warning: may return 0 or nan
