@@ -1,6 +1,5 @@
 from flask import Flask, Response, render_template
 import cv2
-# 여기서 detect는 수정된 YOLOv5 탐지 스크립트입니다.
 import torch
 import numpy as np
 
@@ -11,6 +10,7 @@ model.iou = 0.45
 model.agnostic= True
 model.line = 2
 names = {0:'person', 1:'bicycle', 2:'car', 3:'motorcycle', 5:'bus', 7:'truck'}
+wh= {0:(0.2, 0.35), 1:(0.3, 0.45), 2:(0.5, 0.55), 3:(0.3, 0.45), 5:(0.8, 0.85), 7:(0.7, 0.7)}
 device = 'cuda:0'
 cap = cv2.VideoCapture(0)  # 웹캠 사용
 cv2.VideoWriter_fourcc('M','J','P','G')
@@ -51,27 +51,31 @@ def generate_frames():
             
             if len(det):
                 for i in det:
-                    xywh = (xyxy2xywh(torch.tensor(i[:4]).view(1, 4))/ gn).view(-1).tolist()
-                    w1 = 0.4        # w1 : 1m에서 측정한 Cart b-box width
-                    h1 = 0.44       # h1 : 1m에서 측정한 Cart b-box height                               
-                    std = w1 / h1
-                    
-                    # width값의 오차율이 height보다 작을 떄
-                    if std <= xywh[2] / xywh[3]:
-                        dis = round(w1 / xywh[2]*100)
-                    
-                    # width값의 오차율이 height보다 클 때
-                    else:
-                        dis = round(h1 / xywh[3]*100)
+                    conf = i[4]
+                    cls = int(i[5])
+                    if conf >= model.conf:
+                        xywh = (xyxy2xywh(torch.tensor(i[:4]).view(1, 4))/ gn).view(-1).tolist()
+                        w1, h1 = wh[cls]      # w1 : 1m에서 측정한 Cart b-box width  # h1 : 1m에서 측정한 Cart b-box height                               
+                        std = w1 / h1
+                        
+                        # width값의 오차율이 height보다 작을 떄
+                        if std <= xywh[2] / xywh[3]:
+                
+                            dis = round(w1 / xywh[2])
+                        
+                        # width값의 오차율이 height보다 클 때
+                        else:
+                            dis = round(h1 / xywh[3])
 
-                    c = int(i[5])  # integer class
-                    if dis <=100:
-                        label =  f'{names[c]} {i[4]:.2f} {dis/100:.2f} Warning!'
-                        colors = (0, 0, 255)
-                    else :
-                        label =  f'{names[c]} {i[4]:.2f} {dis/100:.2f}'
-                        colors = (0, 255, 0)                        
-                    plot_one_box(i[:4], img, label=label, color=colors, line_thickness=model.line)
+                        c = int(i[5])  # integer class
+                        if dis <=100 : 
+                            if dis <=1:
+                                label =  f'{names[cls]} Warning!'
+                                colors = (0, 0, 255)
+                            else :
+                                label =  f'{names[cls]} '
+                                colors = (0, 255, 0)                        
+                            plot_one_box(i[:4], img, label=label, color=colors, line_thickness=model.line)
                  
 
            
