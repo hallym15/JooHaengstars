@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template
+from flask import Flask, Response, render_template, url_for
 import cv2
 import torch
 import numpy as np
@@ -8,13 +8,14 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 model.classes = [0, 1, 2, 3, 5, 7]
 model.conf = 0.25
 model.iou = 0.45
-model.agnostic= True
+model.agnostic = True
 model.line = 3
-names = {0:'person', 1:'bicycle', 2:'car', 3:'motorcycle', 5:'bus', 7:'truck'}
-wh= {0:(0.2, 0.35), 1:(0.3, 0.45), 2:(0.5, 0.55), 3:(0.3, 0.45), 5:(0.8, 0.85), 7:(0.7, 0.7)}
-device = 'cuda:0'
+names = {0: 'person', 1: 'bicycle', 2: 'car', 3: 'motorcycle', 5: 'bus', 7: 'truck'}
+wh = {0: (0.2, 0.35), 1: (0.3, 0.45), 2: (0.5, 0.55), 3: (0.3, 0.45), 5: (0.8, 0.85), 7: (0.7, 0.7)}
+device0 = 'cuda:0'
 cap = cv2.VideoCapture(0)  # 웹캠
-cv2.VideoWriter_fourcc('M','J','P','G')
+fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+video_writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))  # 비디오 작성기 생성 및 초기화
 
 def xyxy2xywh(x):
     # Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] where xy1=top-left, xy2=bottom-right
@@ -45,9 +46,10 @@ def generate_frames():
         if not success:
             break
         else:
-            gn = torch.tensor(img.shape, device='cuda:0')[[1, 0, 1, 0]]
+            # gn = torch.tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]], device='cuda:0')
+            gn = torch.tensor(img.shape, device=device0)[[1, 0, 1, 0]]
       
-            pred = model([img]) # 예측하기
+            pred = model([img])  # 예측하기
             det = pred.pred[0]
             
             if len(det):
@@ -55,13 +57,12 @@ def generate_frames():
                     conf = i[4]
                     cls = int(i[5])
                     if conf >= model.conf:
-                        xywh = (xyxy2xywh(torch.tensor(i[:4]).view(1, 4))/ gn).view(-1).tolist()
-                        w1, h1 = wh[cls]      # w1 : 1m에서 측정한 Cart b-box width  # h1 : 1m에서 측정한 Cart b-box height                               
+                        xywh = (xyxy2xywh(torch.tensor(i[:4]).view(1, 4)) / gn).view(-1).tolist()
+                        w1, h1 = wh[cls]  # w1 : 1m에서 측정한 Cart b-box width  # h1 : 1m에서 측정한 Cart b-box height                               
                         std = w1 / h1
                         
-                        # width값의 오차율이 height보다 작을 떄
+                        # width값의 오차율이 height보다 작을 때
                         if std <= xywh[2] / xywh[3]:
-                
                             dis = round(w1 / xywh[2])
                         
                         # width값의 오차율이 height보다 클 때
@@ -69,28 +70,32 @@ def generate_frames():
                             dis = round(h1 / xywh[3])
 
                         c = int(i[5])  # integer class
-                        if dis <=100 : 
-                            if dis <=1:
-                                label =  f'{names[cls]} Warning!'
+                        if dis <= 100:
+                            if dis <= 1:
+                                label = f'{names[cls]} Warning!'
                                 colors = (0, 0, 255)
-                            else :
-                                label =  f'{names[cls]} '
+                            else:
+                                label = f'{names[cls]} '
                                 colors = (0, 255, 0)                        
                             plot_one_box(i[:4], img, label=label, color=colors, line_thickness=model.line)
-                 
 
+            # 프레임 저장
+            video_writer.write(img)
 
             ret, buffer = cv2.imencode('.jpg', img)
             frame = buffer.tobytes()
 
             # 프레임 전송
             yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route('/')
-def index():
+def main():
+    return render_template('main.html')
+@app.route('/index_2')
+def index_2():
     # 비디오 스트리밍을 표시할 메인 페이지
-    return render_template('index.html')
+    return render_template('index_2.html')
 
 @app.route('/video')
 def video():
