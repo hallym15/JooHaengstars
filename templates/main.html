@@ -1,0 +1,53 @@
+<!-- templates/main.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('static/background.png'); /* 이미지 파일명으로 변경 */
+            background-position: center; /* 이미지 중앙 정렬 */
+            background-size: cover; /* 화면에 꽉 차도록 설정 */
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(3, 3, 3, 0.3); 
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #fff; /* 제목 텍스트 색상 */
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>JooHaengStars</h1>
+        <a href="{{ url_for('index_2') }}"><button class="button">start</button></a>
+    </div>
+</body>
+</html>

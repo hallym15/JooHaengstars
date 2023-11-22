@@ -1,0 +1,47 @@
+<!-- templates/index_2.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YOLOv3 객체 탐지</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 18px;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+            margin: 0 auto; /* 수정: 상단 여백 제거 */
+        }
+
+        button {
+            padding: 10px 20px;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('main') }}">
+            <button>Main</button>
+        </a>
+    </nav>
+    <img src="{{ url_for('video') }}">
+</body>
+</html>
